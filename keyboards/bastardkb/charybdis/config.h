@@ -31,6 +31,9 @@
 
 // Invert X axis on mouse reports.
 #define POINTING_DEVICE_INVERT_X
+
+# define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CUSTOM_base_effect
+
 /* RGB matrix support. */
 #ifdef RGB_MATRIX_ENABLE
 #        define ENABLE_RGB_MATRIX_ALPHAS_MODS
