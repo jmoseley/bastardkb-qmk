@@ -28,11 +28,9 @@
     "[json]": {
         "editor.formatOnSave": false
     },
-    "[c]": {
-        "editor.formatOnSave": false
-    },
     "clangd.arguments": [
         "--header-insertion=never"
     ],
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "makefile.configureOnOpen": true
 }

@@ -85,6 +85,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //                            ╰───────────────────────────╯ ╰──────────────────╯
   ),
 };
+// clang-format on
 
 /* ────── Tap-hold timing tweaks ──────────────────────────────────── */
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
@@ -105,15 +106,40 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 #ifdef RGB_MATRIX_ENABLE
 // Forward-declare this helper function since it is defined in rgb_matrix.c.
 void rgb_matrix_update_pwm_buffers(void);
+#endif
+
+// // Fancy simple layer colors
+// layer_state_t layer_state_set_user(layer_state_t state) {
+//     uint8_t layer      = get_highest_layer(state); // layer ID
+//     uint8_t saturation = rgblight_get_sat();       // Current saturated color
+//     uint8_t value      = rgblight_get_val();       // Current brightness value
+
+//     if (layer == 1) {
+//         rgblight_sethsv_noeeprom(180, saturation, value); // violet
+//     } else if (layer == 2) {
+//         rgblight_sethsv_noeeprom(0, saturation, value); // red
+//     } else if (layer == 3) {
+//         rgblight_sethsv_noeeprom(240, saturation, value); // pink
+//     } else if (layer == 4) {
+//         rgblight_sethsv_noeeprom(60, saturation, value); // green
+//     } else {
+//         // default layer
+//         rgblight_sethsv_noeeprom(120, saturation, value); // aqua
+//     }
+
+//     return state;
+// }
 
 void keyboard_post_init_user(void) {
-    rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_base_effect);
+    // rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_base_effect);
+
+  rgblight_enable_noeeprom(); // enables Rgb, without saving settings
+  rgblight_sethsv_noeeprom(100, 100, 100);
+  rgblight_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     uint8_t layer      = get_highest_layer(state); // layer ID
-    //uint8_t saturation = rgblight_get_sat();       // Current saturated color
-    //uint8_t value      = rgblight_get_val();       // Current brightness value
 
     if (layer == 1) {
         rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_layer_1_effect);
@@ -129,4 +155,3 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     }
     return state;
 }
-#endif
