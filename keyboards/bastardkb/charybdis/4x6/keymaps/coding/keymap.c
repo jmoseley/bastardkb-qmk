@@ -8,11 +8,34 @@ enum charybdis_keymap_layers {
     LAYER_BASE = 0,
     LAYER_RAISE,
     LAYER_LOWER,
-    LAYER_MOUSE,
+    LAYER_POINTER,
 };
 
 #define LOWER MO(LAYER_LOWER)
 #define RAISE MO(LAYER_RAISE)
+#define POINTER MO(LAYER_POINTER)
+
+#define CHARYBDIS_AUTO_SNIPING_ON_LAYER LAYER_POINTER
+// #define CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
+
+#ifdef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
+static uint16_t auto_pointer_layer_timer = 0;
+
+#    ifndef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_TIMEOUT_MS
+#        define CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_TIMEOUT_MS 1000
+#    endif // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_TIMEOUT_MS
+
+#    ifndef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD
+#        define CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD 8
+#    endif // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD
+#endif     // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
+
+#ifndef POINTING_DEVICE_ENABLE
+#    define DRGSCRL KC_NO
+#    define DPI_MOD KC_NO
+#    define S_D_MOD KC_NO
+#    define SNIPING KC_NO
+#endif // !POINTING_DEVICE_ENABLE
 
 #define HM_GUI   MT(MOD_LGUI, KC_A)
 #define HM_CTL   MT(MOD_LCTL, KC_S)
@@ -35,8 +58,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // ├────────────────────────────────────────────────────────────────────────────────┤ ├────────────────────────────────────────────────────────────────────────┤
        KC_LALT,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,       KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_LCTL,
   // ╰────────────────────────────────────────────────────────────────────────────────┤ ├────────────────────────────────────────────────────────────────────────╯
-                                             KC_LGUI,   KC_SPC,   LOWER,      RAISE,  KC_ENT,
-                                                            KC_LCTL, LT(LAYER_MOUSE, KC_BSPC),     KC_DEL
+                                             KC_LGUI,   KC_SPC,   LT(LAYER_POINTER, KC_BSPC),      RAISE,  LT(LAYER_POINTER, KC_ENT),
+                                                            KC_LCTL, KC_LSFT,     LOWER
   //                                           ╰──────────────────────────────────────╯ ╰────────────────────────╯
   ),
 
@@ -70,15 +93,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //                                           ╰──────────────────────────────────────╯ ╰────────────────────────╯
   ),
 
-  [LAYER_MOUSE] = LAYOUT(
+  [LAYER_POINTER] = LAYOUT(
   // ╭────────────────────────────────────────────────────────────────────────────────╮ ╭────────────────────────────────────────────────────────────────────────╮
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   // ├────────────────────────────────────────────────────────────────────────────────┤ ├────────────────────────────────────────────────────────────────────────┤
- LCTL(KC_LEFT), LCTL(KC_RGHT), LGUI(KC_LBRC), LGUI(KC_RBRC), KC_WH_U, KC_WH_D,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+ XXXXXXX, XXXXXXX, XXXXXXX, LGUI(KC_LBRC), LGUI(KC_RBRC), XXXXXXX,    XXXXXXX, LCTL(KC_LEFT), LCTL(KC_RGHT), XXXXXXX, XXXXXXX, XXXXXXX,
   // ├────────────────────────────────────────────────────────────────────────────────┤ ├────────────────────────────────────────────────────────────────────────┤
-XXXXXXX, XXXXXXX, KC_LEFT_CTRL, KC_LEFT_SHIFT, KC_LEFT_GUI, XXXXXXX,    XXXXXXX, KC_BTN1, KC_BTN2, XXXXXXX, XXXXXXX, XXXXXXX,
+XXXXXXX, DRGSCRL , KC_LEFT_CTRL, KC_LEFT_SHIFT, KC_LEFT_GUI, XXXXXXX,    XXXXXXX, KC_BTN1, KC_BTN2, XXXXXXX, SNIPING, XXXXXXX,
   // ├────────────────────────────────────────────────────────────────────────────────┤ ├────────────────────────────────────────────────────────────────────────┤
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, LGUI(KC_LBRC), LGUI(KC_RBRC), XXXXXXX, XXXXXXX, XXXXXXX,
   // ╰────────────────────────────────────────────────────────────────────────────────┤ ├────────────────────────────────────────────────────────────────────────╯
                                                XXXXXXX, XXXXXXX, _______,    XXXXXXX, _______,
                                                             XXXXXXX, XXXXXXX,    XXXXXXX
@@ -139,7 +162,10 @@ void keyboard_post_init_user(void) {
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    uint8_t layer      = get_highest_layer(state); // layer ID
+    uint8_t layer = get_highest_layer(state); // layer ID
+    #ifdef CHARYBDIS_AUTO_SNIPING_ON_LAYER
+    charybdis_set_pointer_sniping_enabled(layer_state_cmp(state, CHARYBDIS_AUTO_SNIPING_ON_LAYER));
+    #endif // CHARYBDIS_AUTO_SNIPING_ON_LAYER
 
     if (layer == 1) {
         rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_layer_1_effect);
@@ -147,11 +173,31 @@ layer_state_t layer_state_set_user(layer_state_t state) {
         rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_layer_2_effect);
     } else if (layer == 3) {
         rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_layer_3_effect);
-    } else if (layer == 4) {
-        rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_layer_4_effect);
     } else {
         // default layer
         rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_base_effect);
     }
     return state;
 }
+
+#ifdef POINTING_DEVICE_ENABLE
+#    ifdef CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+    if (abs(mouse_report.x) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD || abs(mouse_report.y) > CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_THRESHOLD) {
+        if (auto_pointer_layer_timer == 0) {
+            layer_on(LAYER_POINTER);
+        }
+        auto_pointer_layer_timer = timer_read();
+    }
+    return mouse_report;
+}
+
+void matrix_scan_user(void) {
+    if (auto_pointer_layer_timer != 0 && TIMER_DIFF_16(timer_read(), auto_pointer_layer_timer) >= CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_TIMEOUT_MS) {
+        auto_pointer_layer_timer = 0;
+        layer_off(LAYER_POINTER);
+    }
+}
+
+#    endif // CHARYBDIS_AUTO_POINTER_LAYER_TRIGGER_ENABLE
+#endif // POINTING_DEVICE_ENABLE
